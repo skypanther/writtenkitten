@@ -131,7 +131,7 @@ textarea { width:500px }
 
 <script>
 var current_word_count = 0;
-var words_for_reward = 100;
+var words_for_reward = 10;
 var kittens_earned = 0;
 var kittens_shown = 0;
 var warning_shown = false;
@@ -177,19 +177,21 @@ $.getJSON(license_url, function(data) {
 });
 
 function word_count(text, wc) {
-  if (typeof localStorage != "undefined") localStorage.text = text;
-  if (current_word_count >= 10 && warning_shown == false) {
-    show_warning();
-  }
-  text = text.replace(/^\s*|\s*$/g,''); //removes whitespace from front and end
-  text = text.replace(/\s+/g,' '); // collapse multiple consecutive spaces
-  var words = text.split(" ");
-  wc.value = words.length;
-  current_word_count = wc.value = words.length;
-  $("#displayWords").html(wc.value);
-  kittens_earned = current_word_count / words_for_reward;
-  if (kittens_earned >= kittens_shown+1) {
-    show_kitten();
+  if(/(\s)/.test(text.slice(-1))) {
+    if (typeof localStorage != "undefined") localStorage.text = text;
+    if (current_word_count >= 5 && warning_shown == false) {
+      show_warning();
+    }
+    text = text.replace(/^\s*|\s*$/g,''); //removes whitespace from front and end
+    text = text.replace(/\s+/g,' '); // collapse multiple consecutive spaces
+    var words = text.split(" ");
+    wc.value = words.length;
+    current_word_count = wc.value = words.length;
+    $("#displayWords").html(wc.value);
+    kittens_earned = current_word_count / words_for_reward;
+    if (current_word_count && current_word_count % words_for_reward === 0) {
+      show_kitten();
+    }
   }
 }
 
@@ -307,9 +309,24 @@ function tabs(e) {
       e.preventDefault();
   }
 }
+
+function do_clear() {
+  current_word_count = 0;
+  kittens_earned = 0;
+  kittens_shown = 0;
+  warning_shown = true;
+  hide_warning(true);
+  $("#writearea").attr("value", "");
+  $("#nextKitten").attr("src", '');
+  $("#kittenFrame").css("background-image", "");
+  $("#kittenCredit").html("");
+  $("#displayWords").html(0);
+  localStorage.clear();
+  return false;
+}
 </script>
 </head>
-<body onLoad="set_search($('#search').val()); set_title(); restore_text(); set_tabs();">
+<body onLoad="set_search($('#search').val()); set_title(); restore_text(); set_tabs(); do_clear();">
 <div id="main">
 <a name="top"></a>
 <h1>Written? <span id="titleKitten">Kitten!</span><span id="titleSearch"></span></h1>
@@ -349,6 +366,9 @@ function tabs(e) {
     </select>
     every
     <select id="howmany" onChange="set_reward(this.value)">
+    <option value="10" selected>10</option>
+    <option value="25">25</option>
+    <option value="50">50</option>
     <option value="100">100</option>
     <option value="200">200</option>
     <option value="500">500</option>
@@ -357,6 +377,9 @@ function tabs(e) {
   </span>
   <span class="meta">
   Current word count: <span id="displayWords">0</span>
+  </span>
+  <span class="meta">
+    <button id="clear" onClick="return do_clear()">Clear</button>
   </span>
 </form>
 </div> <!-- main -->
@@ -388,6 +411,7 @@ cuter and fuzzier.
   <p>
   Enjoy!
   </p>
+  <p style="font-style: italic;font-size: smaller;">Modified by @skypanther: supports fewer words to achieve reward, more options in word count drop-down list, a new word is counted only when you tap the spacebar, added clear button.
   <img src="" id="nextKitten"/>
 </div> <!-- about -->
 
